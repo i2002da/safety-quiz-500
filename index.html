@@ -244,6 +244,30 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 .li-status.ok{color:var(--green);}
 .li-status.ng{color:var(--red);}
 .list-empty{text-align:center;padding:40px 16px;color:var(--text-faint);font-size:13px;}
+
+/* 오답 배지 */
+.saved-badge{
+  display:flex;align-items:center;gap:4px;padding:5px 10px;
+  border-radius:6px;border:1.5px solid var(--border);background:var(--surface2);
+  font-family:var(--mono);font-size:12px;color:var(--text-faint);cursor:pointer;transition:all .2s;
+}
+.saved-badge:hover,.saved-badge.has-wrong{border-color:var(--red);color:var(--red);}
+.saved-badge.has-wrong{background:var(--ng-badge);}
+.saved-icon{font-size:13px;}
+/* 기록 항목 */
+.rec-item{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;
+  border:1px solid var(--border);margin-bottom:5px;cursor:pointer;transition:all .15s;
+  background:var(--surface2);
+}
+.rec-item:hover{border-color:var(--accent);}
+.rec-item.ng{border-color:rgba(239,68,68,.3);background:var(--ng-badge);}
+.rec-item.ok{border-color:rgba(34,197,94,.3);background:var(--ok-badge);}
+.rec-num{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);
+  background:var(--badge-bg);padding:2px 6px;border-radius:3px;flex-shrink:0;}
+.rec-q{font-size:12px;color:var(--text);flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rec-status{font-size:13px;flex-shrink:0;}
 .img-opt-hint{color:var(--text-dim);font-style:italic;font-size:13px;}
 
 /* ===== RESPONSIVE ===== */
@@ -318,10 +342,14 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 <header class="hdr">
   <div class="hdr-logo">🏗️ 관리감독자 500제 <span>건축 안전</span></div>
   <div class="hdr-right">
-    <div class="score-row">
+    <div class="score-row" id="sessionScore">
       <span>정답 <span class="sv ok" id="hC">0</span></span>
       <span>오답 <span class="sv ng" id="hW">0</span></span>
       <span>정답률 <span class="sv" id="hR">-</span></span>
+    </div>
+    <div class="saved-badge" id="savedBadge" title="누적 오답 기록" onclick="showRecordPanel()">
+      <span class="saved-icon">📋</span>
+      <span id="savedWrongCnt">0</span>
     </div>
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="테마 전환">🌙</button>
   </div>
@@ -407,6 +435,46 @@ let pool=[],idx=0,answered=false,results={},wrongSet=new Set();
 let currentCat='전체',sCorrect=0,sWrong=0;
 let listSortAsc=true,showWrongOnly=false;
 
+/* ── localStorage 오답 영속 저장 ── */
+const STORAGE_KEY='quiz_records_v1';
+
+function loadRecords(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const saved=JSON.parse(raw);
+    // results: {num: 'correct'|'wrong'|'skip'}
+    results=saved.results||{};
+    // wrongSet 재구성
+    wrongSet=new Set(
+      Object.entries(results)
+        .filter(([,v])=>v==='wrong')
+        .map(([k])=>parseInt(k))
+    );
+  }catch(e){ console.warn('기록 불러오기 실패',e); }
+}
+
+function saveRecords(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({results, savedAt: Date.now()}));
+  }catch(e){ console.warn('기록 저장 실패',e); }
+}
+
+function clearRecords(){
+  results={}; wrongSet=new Set();
+  localStorage.removeItem(STORAGE_KEY);
+  sCorrect=0; sWrong=0; updateHdr();
+  renderList();
+  showQ();
+}
+
+function getRecordStats(){
+  const vals=Object.values(results);
+  const correct=vals.filter(v=>v==='correct').length;
+  const wrong=vals.filter(v=>v==='wrong').length;
+  return {correct, wrong, total: vals.length};
+}
+
 /* 테마 */
 function initTheme(){
   const t=localStorage.getItem('quiz-theme')||'light';
@@ -455,6 +523,10 @@ function updateHdr(){
   document.getElementById('hW').textContent=sWrong;
   const t=sCorrect+sWrong;
   document.getElementById('hR').textContent=t>0?Math.round(sCorrect/t*100)+'%':'-';
+  // 누적 오답 배지
+  document.getElementById('savedWrongCnt').textContent=wrongSet.size;
+  const badge=document.getElementById('savedBadge');
+  badge.classList.toggle('has-wrong', wrongSet.size>0);
 }
 
 /* 풀 구성 */
@@ -529,6 +601,7 @@ function pick(chosen,q){
   document.getElementById('btnNext').className='btn btn-next show';
   document.getElementById('btnSkip').className='btn btn-skip';
   updateHdr();
+  saveRecords();
   if(isPC()) renderList();
 }
 
@@ -629,12 +702,110 @@ function toggleWrongFilter(){
   renderList();
 }
 
+
+/* ── 기록 패널 ── */
+function showRecordPanel(){
+  const stats=getRecordStats();
+  const total=DATA.length;
+  // 요약
+  const saved=localStorage.getItem(STORAGE_KEY);
+  const savedAt=saved?new Date(JSON.parse(saved).savedAt||0):null;
+  const dateStr=savedAt?savedAt.toLocaleString('ko-KR',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'없음';
+  document.getElementById('recordSummary').innerHTML=
+    '<div style="display:flex;gap:14px;font-size:12px;font-family:var(--mono);color:var(--text-dim);flex-wrap:wrap;">'+
+    '<span>풀이완료 <b style="color:var(--text)">'+stats.total+'</b>/'+total+'</span>'+
+    '<span>정답 <b style="color:var(--green)">'+stats.correct+'</b></span>'+
+    '<span>오답 <b style="color:var(--red)">'+stats.wrong+'</b></span>'+
+    '<span style="margin-left:auto;color:var(--text-faint)">마지막 저장: '+dateStr+'</span>'+
+    '</div>';
+  // 목록 (오답 우선 정렬)
+  const entries=Object.entries(results).map(([k,v])=>({num:parseInt(k),status:v}));
+  entries.sort((a,b)=>{
+    if(a.status==='wrong'&&b.status!=='wrong') return -1;
+    if(a.status!=='wrong'&&b.status==='wrong') return 1;
+    return a.num-b.num;
+  });
+  const list=document.getElementById('recordList');
+  if(!entries.length){
+    list.innerHTML='<div style="text-align:center;padding:32px;color:var(--text-faint);font-size:13px;">아직 풀이 기록이 없습니다</div>';
+  } else {
+    list.innerHTML=entries.map(({num,status})=>{
+      const q=DATA.find(q=>q.num===num);
+      const qtxt=q?q.question.substring(0,42)+(q.question.length>42?'…':''):'(문제 없음)';
+      const icon=status==='correct'?'✓':'✗';
+      return '<div class="rec-item '+(status==='wrong'?'ng':'ok')+'" onclick="goToQ('+num+');hideRecordPanel()">'+
+        '<span class="rec-num">Q.'+num+'</span>'+
+        '<span class="rec-q">'+qtxt+'</span>'+
+        '<span class="rec-status '+(status==='wrong'?'ng':'ok')+'">'+icon+'</span>'+
+        '</div>';
+    }).join('');
+  }
+  document.getElementById('btnRetryWrong').disabled=wrongSet.size===0;
+  document.getElementById('btnRetryWrong').style.opacity=wrongSet.size===0?'0.4':'1';
+  document.getElementById('recordOverlay').style.display='block';
+  document.getElementById('recordPanel').style.display='flex';
+}
+
+function hideRecordPanel(){
+  document.getElementById('recordOverlay').style.display='none';
+  document.getElementById('recordPanel').style.display='none';
+}
+
+function retryWrongSaved(){
+  hideRecordPanel();
+  if(wrongSet.size===0){alert('저장된 오답이 없습니다.');return;}
+  currentCat='__wrong__';
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('[data-cat="__wrong__"]').classList.add('active');
+  buildPool('__wrong__'); sCorrect=0; sWrong=0; updateHdr();
+  document.getElementById('qCard').style.display='';
+  if(!isPC()) switchTab('quiz');
+  showQ();
+}
+
+function confirmClearRecords(){
+  if(confirm('모든 풀이 기록(정답/오답)을 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')){
+    clearRecords();
+    hideRecordPanel();
+    renderList();
+  }
+}
+
 /* 초기화 */
 initTheme();
+loadRecords();   // ★ 저장된 오답 기록 불러오기
 applyLayout();
 buildPool('전체');
 showQ();
 renderList();
 </script>
+
+<!-- 오답 기록 패널 모달 -->
+<div id="recordOverlay" onclick="hideRecordPanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;"></div>
+<div id="recordPanel" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:101;
+  background:var(--surface);border:1.5px solid var(--border);border-radius:12px;
+  width:min(480px,92vw);max-height:80vh;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 8px 40px rgba(0,0,0,.3);">
+  <div style="padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div style="font-size:15px;font-weight:800;color:var(--text);">📋 누적 오답 기록</div>
+    <button onclick="hideRecordPanel()" style="background:none;border:none;color:var(--text-faint);font-size:20px;line-height:1;padding:0 4px;">&times;</button>
+  </div>
+  <div style="padding:12px 18px;border-bottom:1px solid var(--border);flex-shrink:0;" id="recordSummary"></div>
+  <div style="flex:1;overflow-y:auto;padding:10px 14px;" id="recordList"></div>
+  <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;">
+    <button onclick="retryWrongSaved()" id="btnRetryWrong"
+      style="flex:1;padding:10px;border-radius:6px;background:var(--red);color:#fff;border:none;font-size:13px;font-weight:700;">
+      ❌ 오답만 다시 풀기
+    </button>
+    <button onclick="confirmClearRecords()"
+      style="padding:10px 14px;border-radius:6px;background:var(--surface2);color:var(--text-dim);border:1.5px solid var(--border);font-size:12px;">
+      기록 초기화
+    </button>
+    <button onclick="hideRecordPanel()"
+      style="padding:10px 14px;border-radius:6px;background:var(--surface2);color:var(--text-dim);border:1.5px solid var(--border);font-size:13px;font-weight:600;">
+      닫기
+    </button>
+  </div>
+</div>
 </body>
 </html>
