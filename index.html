@@ -39,11 +39,12 @@
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;}
+html,body{height:100%;margin:0;}
 body{
   font-family:var(--sans); background:var(--bg); color:var(--text);
-  min-height:100dvh; display:flex; flex-direction:column;
+  height:100dvh; max-height:100dvh; display:flex; flex-direction:column;
   transition:background .25s,color .25s; -webkit-font-smoothing:antialiased;
+  overflow:hidden;
 }
 button{font-family:var(--sans);cursor:pointer;border:none;}
 ::-webkit-scrollbar{width:5px;}
@@ -52,8 +53,8 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 /* HEADER */
 .hdr{
   background:var(--surface); border-bottom:1.5px solid var(--border);
-  padding:0 20px; height:56px; display:flex; align-items:center;
-  justify-content:space-between; gap:12px; flex-shrink:0;
+  padding:0 16px; height:52px; display:flex; align-items:center;
+  justify-content:space-between; gap:10px; flex-shrink:0;
   box-shadow:var(--shadow); position:relative; z-index:10;
 }
 .hdr-logo{font-size:17px;font-weight:900;color:var(--accent);white-space:nowrap;}
@@ -77,7 +78,7 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 /* TAB BAR */
 .tab-bar{background:var(--surface);border-bottom:1px solid var(--border);display:flex;flex-shrink:0;}
 .tab{
-  flex:1;padding:10px 8px;text-align:center;font-size:13px;font-weight:700;
+  flex:1;padding:8px 6px;text-align:center;font-size:12px;font-weight:700;
   cursor:pointer;color:var(--text-faint);border-bottom:2.5px solid transparent;
   transition:all .15s;user-select:none;background:none;border-left:none;border-right:none;border-top:none;
 }
@@ -128,15 +129,15 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 
 /* PROGRESS */
 .prog-wrap{
-  padding:8px 18px 5px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;
+  padding:6px 16px 4px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;
 }
 .prog-info{display:flex;justify-content:space-between;font-size:11px;font-family:var(--mono);color:var(--text-faint);margin-bottom:5px;}
 .prog-bar{height:3px;background:var(--prog-track);border-radius:2px;overflow:hidden;}
 .prog-fill{height:100%;background:linear-gradient(90deg,#e85d04,var(--accent));border-radius:2px;transition:width .35s;}
 
 /* QUIZ SCROLL */
-.quiz-scroll{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;align-items:center;}
-.quiz-inner{width:100%;max-width:720px;}
+.quiz-scroll{flex:1;overflow-y:auto;padding:12px 12px 0;display:flex;flex-direction:column;align-items:center;-webkit-overflow-scrolling:touch;}
+.quiz-inner{width:100%;max-width:720px;padding-bottom:16px;}
 
 /* QUESTION CARD */
 .q-card{
@@ -152,7 +153,7 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
 .q-meta{
-  display:flex;align-items:center;gap:8px;padding:10px 16px;
+  display:flex;align-items:center;gap:7px;padding:8px 14px;
   border-bottom:1px solid var(--border);background:var(--surface2);flex-wrap:wrap;
 }
 .q-num{
@@ -164,16 +165,16 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 .q-hist.ok{color:var(--green);background:var(--ok-badge);border:1px solid var(--ok-badge-border);}
 .q-hist.ng{color:var(--red);background:var(--ng-badge);border:1px solid var(--ng-badge-border);}
 
-.q-text{padding:18px 18px 14px;font-size:15px;font-weight:700;line-height:1.7;color:var(--text);}
+.q-text{padding:14px 16px 10px;font-size:14px;font-weight:700;line-height:1.65;color:var(--text);}
 .q-img{padding:0 18px 14px;text-align:center;}
 .q-img img{max-width:100%;border-radius:6px;border:1.5px solid var(--border);}
 
 /* OPTIONS */
-.opts{padding:0 16px 14px;display:flex;flex-direction:column;gap:7px;}
+.opts{padding:0 14px 12px;display:flex;flex-direction:column;gap:6px;}
 .opt{
   width:100%;text-align:left;background:var(--surface2);border:1.5px solid var(--border);
-  border-radius:var(--radius-sm);padding:11px 14px;color:var(--text);
-  font-size:14px;transition:all .15s;display:flex;align-items:flex-start;gap:10px;line-height:1.55;
+  border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);
+  font-size:13px;transition:all .15s;display:flex;align-items:flex-start;gap:8px;line-height:1.5;
 }
 .opt:hover:not(:disabled){border-color:var(--accent);background:var(--opt-hover-bg);}
 .opt-n{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text-faint);min-width:18px;flex-shrink:0;padding-top:1px;}
@@ -184,7 +185,7 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 .opt:disabled{cursor:default;}
 
 /* RESULT BOX */
-.res-box{margin:0 16px 14px;border-radius:var(--radius-sm);padding:13px 15px;font-size:13px;line-height:1.65;display:none;border-left:3px solid;}
+.res-box{margin:0 14px 10px;border-radius:var(--radius-sm);padding:10px 12px;font-size:12.5px;line-height:1.6;display:none;border-left:3px solid;}
 .res-box.show{display:block;animation:fadeUp .2s;}
 .res-box.ok{background:var(--ok-bg);border-color:var(--green);}
 .res-box.ng{background:var(--ng-bg);border-color:var(--red);}
@@ -194,7 +195,7 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 .res-expl{color:var(--text-dim);font-size:12.5px;}
 
 /* BUTTONS */
-.btn-row{display:flex;gap:8px;padding:2px 16px 16px;}
+.btn-row{display:flex;gap:8px;padding:2px 14px 14px;}
 .btn{flex:1;padding:12px;border-radius:var(--radius-sm);border:none;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;display:none;}
 .btn.show{display:block;}
 .btn-next{background:var(--accent);color:#fff;}
@@ -294,7 +295,7 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 
 /* 태블릿 768px+ */
 @media(min-width:768px){
-  .hdr{padding:0 26px;height:58px;}
+  .hdr{padding:0 24px;height:56px;}
   .hdr-logo{font-size:18px;}
   .filter-scroll{padding:9px 20px;gap:6px;}
   .cat-btn{font-size:12px;padding:5px 12px;}
@@ -333,24 +334,46 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 
 /* 모바일 480px 이하 */
 @media(max-width:480px){
-  .hdr{padding:0 12px;height:50px;}
-  .hdr-logo{font-size:14px;}
+  /* 헤더 */
+  .hdr{padding:0 10px;height:46px;}
+  .hdr-logo{font-size:13px;}
   .hdr-logo span{display:none;}
-  .score-row{font-size:11px;padding:4px 8px;gap:8px;}
-  .theme-btn{width:30px;height:30px;font-size:14px;}
-  .filter-scroll{padding:7px 10px;gap:4px;}
+  .score-row{font-size:10px;padding:3px 7px;gap:6px;}
+  .saved-badge{padding:3px 7px;font-size:11px;}
+  .theme-btn{width:28px;height:28px;font-size:13px;}
+  /* 탭 */
+  .tab{padding:7px 5px;font-size:11px;}
+  /* 카테고리 */
+  .filter-scroll{padding:6px 10px;gap:4px;}
   .cat-btn{font-size:10px;padding:3px 8px;}
-  .prog-wrap{padding:7px 12px 4px;}
-  .quiz-scroll{padding:10px;}
-  .q-text{font-size:14px;padding:14px 14px 10px;}
-  .opts{padding:0 12px 12px;gap:6px;}
-  .opt{font-size:13px;padding:10px 12px;}
-  .btn-row{padding:2px 12px 12px;}
-  .res-box{margin:0 12px 12px;}
-  .q-meta{padding:8px 12px;}
-  .q-img{padding:0 12px 10px;}
-  .list-body{padding:8px 9px;}
-  .list-header{padding:8px 10px;gap:5px;}
+  .fl{font-size:9px;padding:6px 0 6px 10px;}
+  /* 진행바 */
+  .prog-wrap{padding:5px 10px 3px;}
+  .prog-info{font-size:10px;margin-bottom:4px;}
+  /* 퀴즈 스크롤 */
+  .quiz-scroll{padding:8px 8px 0;}
+  .quiz-inner{padding-bottom:12px;}
+  /* 문제 카드 */
+  .q-meta{padding:7px 10px;gap:5px;}
+  .q-num{font-size:11px;padding:2px 6px;}
+  .q-cat{font-size:9px;padding:1px 5px;}
+  .q-text{font-size:13px;padding:12px 12px 8px;line-height:1.6;}
+  .q-img{padding:0 10px 8px;}
+  /* 보기 */
+  .opts{padding:0 10px 10px;gap:5px;}
+  .opt{font-size:12px;padding:9px 10px;gap:7px;}
+  .opt-n{font-size:11px;min-width:16px;}
+  /* 결과 */
+  .res-box{margin:0 10px 8px;padding:9px 10px;font-size:12px;}
+  .res-lbl{font-size:13px;}
+  /* 버튼 */
+  .btn-row{padding:2px 10px 10px;gap:6px;}
+  .btn{padding:11px;font-size:13px;}
+  .btn-skip{padding:11px 14px;}
+  /* 목록 */
+  .list-body{padding:6px 8px;}
+  .list-header{padding:7px 10px;gap:5px;}
+  .list-search{font-size:12px;padding:6px 10px;}
 }
 @supports(padding-bottom:env(safe-area-inset-bottom)){
   .btn-row{padding-bottom:max(12px,env(safe-area-inset-bottom));}
