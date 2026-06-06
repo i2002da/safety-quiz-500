@@ -93,9 +93,29 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 /* FILTER BAR */
 .filter-bar{
   background:var(--surface);border-bottom:1px solid var(--border);
-  padding:8px 16px;display:flex;gap:5px;flex-wrap:wrap;align-items:center;flex-shrink:0;
+  padding:0;display:flex;align-items:center;flex-shrink:0;
+  position:relative;
 }
-.fl{font-size:10px;color:var(--text-faint);margin-right:2px;font-family:var(--mono);}
+.filter-scroll{
+  display:flex;gap:6px;align-items:center;
+  overflow-x:auto;overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  scroll-snap-type:x proximity;
+  padding:8px 16px;
+  flex:1;
+  scrollbar-width:none;
+}
+.filter-scroll::-webkit-scrollbar{display:none;}
+/* 끝 페이드 효과 */
+.filter-bar::after{
+  content:'';position:absolute;right:0;top:0;bottom:0;width:28px;
+  background:linear-gradient(to right, transparent, var(--surface));
+  pointer-events:none;
+}
+.fl{
+  font-size:10px;color:var(--text-faint);font-family:var(--mono);
+  flex-shrink:0;padding:8px 0 8px 14px;white-space:nowrap;
+}
 .cat-btn{
   font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;
   border:1.5px solid var(--border);background:var(--surface2);color:var(--text-dim);
@@ -276,7 +296,7 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 @media(min-width:768px){
   .hdr{padding:0 26px;height:58px;}
   .hdr-logo{font-size:18px;}
-  .filter-bar{padding:9px 20px;gap:6px;}
+  .filter-scroll{padding:9px 20px;gap:6px;}
   .cat-btn{font-size:12px;padding:5px 12px;}
   .prog-wrap{padding:9px 22px 5px;}
   .quiz-scroll{padding:18px 22px;}
@@ -291,7 +311,7 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 /* PC 1200px+ — 좌우 분할 레이아웃 */
 @media(min-width:1200px){
   .hdr{padding:0 32px;}
-  .filter-bar{padding:9px 28px;}
+  .filter-scroll{padding:9px 28px;}
   .prog-wrap{padding:9px 28px 5px;}
   .quiz-scroll{padding:20px 28px;}
   .tab-bar{display:none;}  /* PC는 탭 불필요 */
@@ -318,7 +338,7 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
   .hdr-logo span{display:none;}
   .score-row{font-size:11px;padding:4px 8px;gap:8px;}
   .theme-btn{width:30px;height:30px;font-size:14px;}
-  .filter-bar{padding:7px 10px;gap:4px;}
+  .filter-scroll{padding:7px 10px;gap:4px;}
   .cat-btn{font-size:10px;padding:3px 8px;}
   .prog-wrap{padding:7px 12px 4px;}
   .quiz-scroll{padding:10px;}
@@ -365,15 +385,17 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
   <div id="quizTab">
     <div class="filter-bar">
       <span class="fl">카테고리</span>
-      <button class="cat-btn active" data-cat="전체">전체</button>
-      <button class="cat-btn" data-cat="안전보건시스템">안전보건시스템</button>
-      <button class="cat-btn" data-cat="현장 안전관리">현장 안전관리</button>
-      <button class="cat-btn" data-cat="현장 보건관리">현장 보건관리</button>
-      <button class="cat-btn" data-cat="관리감독자의 역할">관리감독자</button>
-      <button class="cat-btn" data-cat="산업안전보건법/중대재해처벌법">산업안전보건법</button>
-      <button class="cat-btn" data-cat="산업안전기준에 관한 규칙">안전기준규칙</button>
-      <button class="cat-btn" data-cat="사고사례">사고사례</button>
-      <button class="cat-btn wcat" data-cat="__wrong__">❌ 오답만</button>
+      <div class="filter-scroll" id="filterScroll">
+        <button class="cat-btn active" data-cat="전체">전체</button>
+        <button class="cat-btn" data-cat="안전보건시스템">안전보건시스템</button>
+        <button class="cat-btn" data-cat="현장 안전관리">현장 안전관리</button>
+        <button class="cat-btn" data-cat="현장 보건관리">현장 보건관리</button>
+        <button class="cat-btn" data-cat="관리감독자의 역할">관리감독자의 역할</button>
+        <button class="cat-btn" data-cat="산업안전보건법/중대재해처벌법">산업안전보건법</button>
+        <button class="cat-btn" data-cat="산업안전기준에 관한 규칙">안전기준에 관한 규칙</button>
+        <button class="cat-btn" data-cat="사고사례">사고사례</button>
+        <button class="cat-btn wcat" data-cat="__wrong__">❌ 오답만</button>
+      </div>
     </div>
     <div class="prog-wrap">
       <div class="prog-info"><span id="progTxt">0 / 0</span><span id="progPct">0%</span></div>
@@ -641,6 +663,8 @@ document.querySelectorAll('.cat-btn').forEach(btn=>{
     if(cat==='__wrong__'&&wrongSet.size===0){alert('아직 오답이 없습니다!');return;}
     document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
+    // 선택한 버튼이 스크롤 영역에 보이도록
+    btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
     currentCat=cat; buildPool(cat); sCorrect=0; sWrong=0; updateHdr();
     document.getElementById('qCard').style.display='';
     showQ();
