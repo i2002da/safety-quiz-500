@@ -265,6 +265,102 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 .li-status.ok{color:var(--green);}
 .li-status.ng{color:var(--red);}
 .list-empty{text-align:center;padding:40px 16px;color:var(--text-faint);font-size:13px;}
+/* ── 풀이 모드 바 ── */
+.mode-bar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0;display:flex;align-items:center;flex-shrink:0;
+}
+.mode-scroll{
+  display:flex;gap:0;align-items:stretch;overflow-x:auto;overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1;
+}
+.mode-scroll::-webkit-scrollbar{display:none;}
+.mode-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:7px 13px;white-space:nowrap;font-size:11px;font-weight:700;
+  background:none;border:none;border-bottom:2.5px solid transparent;
+  color:var(--text-faint);cursor:pointer;transition:all .15s;flex-shrink:0;
+}
+.mode-btn:hover{color:var(--text-dim);}
+.mode-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.mode-btn .mi{font-size:13px;}
+/* 풀이 모드 배지 */
+.mode-badge{
+  font-size:9px;font-family:var(--mono);padding:1px 5px;
+  border-radius:10px;background:var(--badge-bg);color:var(--accent);
+  font-weight:700;
+}
+
+/* ── 유사문제 패널 ── */
+#similarOverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;}
+#similarPanel{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:201;
+  background:var(--surface);border-top:2px solid var(--accent);
+  border-radius:14px 14px 0 0;
+  max-height:82vh;overflow:hidden;
+  display:none;flex-direction:column;
+  box-shadow:0 -4px 24px rgba(0,0,0,.2);
+}
+#similarPanel.show{display:flex;}
+.sim-header{
+  padding:14px 16px 10px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+}
+.sim-title{font-size:14px;font-weight:800;color:var(--text);flex:1;}
+.sim-close{background:none;border:none;color:var(--text-faint);font-size:22px;line-height:1;padding:0;}
+.sim-topics{
+  padding:8px 14px;border-bottom:1px solid var(--border);
+  display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;
+}
+.sim-topics::-webkit-scrollbar{display:none;}
+.topic-btn{
+  font-size:11px;font-weight:600;padding:4px 10px;border-radius:16px;
+  border:1.5px solid var(--border);background:var(--surface2);color:var(--text-dim);
+  white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;
+}
+.topic-btn:hover{border-color:var(--accent);color:var(--accent);}
+.topic-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.sim-stats{
+  padding:6px 14px;font-size:11px;font-family:var(--mono);
+  color:var(--text-faint);border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.sim-list{flex:1;overflow-y:auto;padding:8px 12px;-webkit-overflow-scrolling:touch;}
+.sim-item{
+  display:flex;align-items:flex-start;gap:9px;padding:10px 11px;
+  border-radius:7px;border:1.5px solid var(--border);margin-bottom:6px;
+  cursor:pointer;transition:all .15s;background:var(--surface2);
+}
+.sim-item:hover{border-color:var(--accent);transform:translateY(-1px);}
+.sim-item.ng{border-color:rgba(239,68,68,.35);background:var(--ng-badge);}
+.sim-item.ok{border-color:rgba(34,197,94,.3);background:var(--ok-badge);}
+.sim-num{
+  font-family:var(--mono);font-size:11px;font-weight:700;color:var(--accent);
+  background:var(--badge-bg);padding:2px 6px;border-radius:3px;flex-shrink:0;white-space:nowrap;
+}
+.sim-body{flex:1;min-width:0;}
+.sim-q{font-size:12px;line-height:1.45;color:var(--text);margin-bottom:2px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.sim-cat{font-size:10px;color:var(--text-faint);font-family:var(--mono);}
+.sim-status{font-size:13px;flex-shrink:0;}
+.sim-empty{text-align:center;padding:32px 16px;color:var(--text-faint);font-size:13px;}
+.sim-footer{
+  padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0;
+  display:flex;gap:8px;
+}
+.sim-start-btn{
+  flex:1;padding:11px;border-radius:7px;background:var(--accent);color:#fff;
+  border:none;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;
+}
+.sim-start-btn:hover{background:var(--accent-h);}
+/* 480px */
+@media(max-width:480px){
+  .mode-btn{padding:6px 10px;font-size:10px;}
+  .sim-header{padding:12px 14px 8px;}
+  .sim-title{font-size:13px;}
+  .sim-topics{padding:6px 10px;}
+  .topic-btn{font-size:10px;padding:3px 8px;}
+}
+
 
 /* 오답 배지 */
 .saved-badge{
@@ -401,11 +497,25 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 <div class="tab-bar" id="tabBar">
   <button class="tab active" id="tabQuiz" onclick="switchTab('quiz')">📝 퀴즈</button>
   <button class="tab" id="tabList" onclick="switchTab('list')">📋 문제 목록</button>
+  <button class="tab" id="tabSimilar" onclick="switchTab('similar')">🔍 유사문제</button>
 </div>
 
 <div id="mainContent">
 
   <div id="quizTab">
+    <div class="mode-bar">
+      <div class="mode-scroll">
+        <button class="mode-btn active" id="modeRandom" onclick="setMode('random')">
+          <span class="mi">🔀</span>랜덤 풀기<span class="mode-badge" id="badgeRandom">섞기</span>
+        </button>
+        <button class="mode-btn" id="modeOrder" onclick="setMode('order')">
+          <span class="mi">📑</span>순서대로<span class="mode-badge" id="badgeOrder">1→500</span>
+        </button>
+        <button class="mode-btn" id="modeWrong" onclick="setMode('wrong')">
+          <span class="mi">❌</span>오답만<span class="mode-badge" id="badgeWrongMode">0</span>
+        </button>
+      </div>
+    </div>
     <div class="filter-bar">
       <span class="fl">카테고리</span>
       <div class="filter-scroll" id="filterScroll">
@@ -538,29 +648,202 @@ function toggleTheme(){
 function isPC(){return window.innerWidth>=1200;}
 function applyLayout(){
   const lp=document.getElementById('listPanel');
+  const sp=document.getElementById('similarTab');
   const tb=document.getElementById('tabBar');
   if(isPC()){
     lp.style.display='flex';
+    sp.style.display='none';
     tb.style.display='none';
     renderList();
   } else {
     tb.style.display='';
     if(!document.getElementById('tabList').classList.contains('active'))
       lp.style.display='none';
+    if(!document.getElementById('tabSimilar').classList.contains('active'))
+      sp.style.display='none';
   }
 }
 window.addEventListener('resize',applyLayout);
 
-/* 탭 전환 (모바일/태블릿) */
-function switchTab(tab){
-  if(isPC()) return;
-  document.getElementById('tabQuiz').classList.toggle('active',tab==='quiz');
-  document.getElementById('tabList').classList.toggle('active',tab==='list');
-  document.getElementById('quizTab').style.display=tab==='quiz'?'':'none';
-  const lp=document.getElementById('listPanel');
-  if(tab==='list'){lp.style.display='flex';renderList();}
-  else lp.style.display='none';
+/* switchTab → 아래 재정의 */
+
+/* ── 유사문제 주제 그룹 ── */
+const TOPIC_GROUPS = [
+  ["위험성평가", ["위험성평가","위험성 평가","위험성추정","위험성결정","유해·위험요인"]],
+  ["추락·떨어짐", ["추락","떨어짐","안전난간","개구부","사다리","달비계","곤돌라","생명줄","구명줄"]],
+  ["비계·거푸집", ["비계","거푸집","동바리","시스템비계","강관비계","작업발판"]],
+  ["크레인·양중", ["크레인","양중","리프트","달기구","훅","와이어로프","줄걸이","이동식크레인"]],
+  ["굴착·토공", ["굴착","토사","흙막이","지보공","사면","절토","터파기"]],
+  ["화재·폭발", ["화재","폭발","인화","소화","용접","불꽃","불티","가연성"]],
+  ["전기·감전", ["감전","전기","누전","접지","절연","전압","충전부"]],
+  ["지게차·차량", ["지게차","차량계","굴삭기","덤프","롤러","중장비","아웃리거"]],
+  ["화학물질·MSDS", ["MSDS","화학물질","GHS","경고표지","그림문자","유해물질","화학"]],
+  ["보호구", ["보호구","안전모","안전화","안전대","안전벨트","방진마스크","귀마개","보안경","방독"]],
+  ["안전보건표지", ["안전보건표지","안전표지","금지표지","경고 표지","지시 표지","안내표지","표지판"]],
+  ["밀폐공간·보건", ["밀폐공간","산소결핍","유해가스","소음","진동","분진","환기","황화수소"]],
+  ["고소작업", ["고소작업","고소작업대","작업발판","로프","구명줄","안전대"]],
+  ["산업안전보건법", ["산업안전보건법","중대재해처벌법","안전보건관리책임자","산업재해"]],
+  ["관리감독자", ["관리감독자","안전보건","TBM","아차사고","취약근로자","야간근로"]],
+  ["사고조사·원인", ["사고","재해","조사","직접원인","간접원인","하인리히","버드"]],
+];
+
+/* 주제별 문제 번호 캐시 */
+let topicCache = null;
+function buildTopicCache(){
+  if(topicCache) return topicCache;
+  topicCache = {};
+  TOPIC_GROUPS.forEach(([name, kws])=>{
+    topicCache[name] = DATA.filter(q=>{
+      const text = q.question + ' ' + q.options.join(' ');
+      return kws.some(kw=>text.includes(kw));
+    }).map(q=>q.num);
+  });
+  return topicCache;
 }
+
+/* ── 풀이 모드 ── */
+let quizMode = 'random'; // 'random' | 'order' | 'wrong'
+
+function setMode(mode){
+  if(mode==='wrong' && wrongSet.size===0){ alert('저장된 오답이 없습니다.'); return; }
+  quizMode = mode;
+  ['random','order','wrong'].forEach(m=>{
+    document.getElementById('mode'+m.charAt(0).toUpperCase()+m.slice(1))
+      .classList.toggle('active', m===mode);
+  });
+  buildPool(currentCat);
+  sCorrect=0; sWrong=0; updateHdr();
+  document.getElementById('qCard').style.display='';
+  showQ();
+}
+
+function updateModeBadge(){
+  document.getElementById('badgeWrongMode').textContent = wrongSet.size;
+}
+
+/* buildPool 오버라이드 */
+function buildPool(cat){
+  let base;
+  if(quizMode==='wrong'){
+    base = DATA.filter(q=>wrongSet.has(q.num));
+  } else if(cat==='__wrong__'){
+    base = DATA.filter(q=>wrongSet.has(q.num));
+  } else if(cat==='전체'){
+    base = [...DATA];
+  } else {
+    base = DATA.filter(q=>q.category===cat);
+  }
+  if(quizMode==='random') shuffle(base);
+  else base.sort((a,b)=>a.num-b.num);
+  pool=base; idx=0;
+}
+
+/* ── 유사문제 탭 ── */
+let activeTopic = null;
+let simNums = [];
+
+function initSimilarTab(){
+  const cache = buildTopicCache();
+  const bar = document.getElementById('simTopicBar');
+  bar.innerHTML = '';
+  TOPIC_GROUPS.forEach(([name])=>{
+    const cnt = (cache[name]||[]).length;
+    if(cnt===0) return;
+    const btn = document.createElement('button');
+    btn.className='topic-btn';
+    btn.dataset.topic=name;
+    btn.innerHTML=name+'<span style="margin-left:4px;font-size:9px;opacity:.7">'+cnt+'</span>';
+    btn.onclick=()=>selectTopic(name);
+    bar.appendChild(btn);
+  });
+}
+
+function selectTopic(name){
+  activeTopic=name;
+  document.querySelectorAll('.topic-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.topic===name);
+    if(b.dataset.topic===name) b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  });
+  const cache=buildTopicCache();
+  simNums=(cache[name]||[]).slice().sort((a,b)=>a-b);
+  renderSimList();
+  const startBtn=document.getElementById('simStartBtn');
+  startBtn.disabled=simNums.length===0;
+  startBtn.style.opacity=simNums.length>0?'1':'0.4';
+  startBtn.textContent='🚀 '+name+' 퀴즈 시작 ('+simNums.length+'문제)';
+}
+
+function renderSimList(){
+  const list=document.getElementById('simList');
+  const stats=document.getElementById('simStats');
+  if(!simNums.length){
+    list.innerHTML='<div class="sim-empty">해당 주제의 문제가 없습니다</div>';
+    stats.textContent='';
+    return;
+  }
+  const correct=simNums.filter(n=>results[n]==='correct').length;
+  const wrong=simNums.filter(n=>results[n]==='wrong').length;
+  stats.textContent='총 '+simNums.length+'문제 · 정답 '+correct+' · 오답 '+wrong+' · 미풀이 '+(simNums.length-correct-wrong);
+  list.innerHTML=simNums.map(num=>{
+    const q=DATA.find(q=>q.num===num);
+    if(!q) return '';
+    const st=results[num];
+    const stClass=st==='correct'?'ok':st==='wrong'?'ng':'';
+    const icon=st==='correct'?'✓':st==='wrong'?'✗':'';
+    return '<div class="sim-item '+stClass+'" onclick="goToSim('+num+')">'+
+      '<span class="sim-num">Q.'+num+'</span>'+
+      '<div class="sim-body">'+
+        '<div class="sim-q">'+q.question+'</div>'+
+        '<div class="sim-cat">'+q.category+'</div>'+
+      '</div>'+
+      '<span class="sim-status '+(st==='correct'?'ok':st==='wrong'?'ng':'')+'">'+icon+'</span>'+
+    '</div>';
+  }).join('');
+}
+
+function goToSim(num){
+  switchTab('quiz');
+  pool = simNums.map(n=>DATA.find(q=>q.num===n)).filter(Boolean);
+  if(quizMode==='random') shuffle(pool);
+  const qi = pool.findIndex(q=>q.num===num);
+  idx = qi>=0 ? qi : 0;
+  document.getElementById('qCard').style.display='';
+  showQ();
+}
+
+function startSimilarQuiz(){
+  if(!simNums.length) return;
+  switchTab('quiz');
+  pool = simNums.map(n=>DATA.find(q=>q.num===n)).filter(Boolean);
+  if(quizMode==='random') shuffle(pool);
+  else pool.sort((a,b)=>a.num-b.num);
+  idx=0; sCorrect=0; sWrong=0; updateHdr();
+  document.getElementById('qCard').style.display='';
+  showQ();
+  // 카테고리 버튼 해제
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  currentCat='전체';
+}
+
+/* ── switchTab 확장 ── */
+function switchTab(tab){
+  if(isPC() && tab!=='similar') return;
+  ['quiz','list','similar'].forEach(t=>{
+    document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active',t===tab);
+  });
+  document.getElementById('quizTab').style.display = tab==='quiz'?'':'none';
+  const lp=document.getElementById('listPanel');
+  if(tab==='list'){lp.style.display='flex'; renderList();}
+  else if(!isPC()) lp.style.display='none';
+  const sp=document.getElementById('similarTab');
+  if(tab==='similar'){
+    sp.style.display='flex';
+    initSimilarTab();
+  } else {
+    sp.style.display='none';
+  }
+}
+
 
 /* 점수 */
 function updateHdr(){
@@ -572,6 +855,7 @@ function updateHdr(){
   document.getElementById('savedWrongCnt').textContent=wrongSet.size;
   const badge=document.getElementById('savedBadge');
   badge.classList.toggle('has-wrong', wrongSet.size>0);
+  updateModeBadge();
 }
 
 /* 풀 구성 */
@@ -647,7 +931,9 @@ function pick(chosen,q){
   document.getElementById('btnSkip').className='btn btn-skip';
   updateHdr();
   saveRecords();
+  updateModeBadge();
   if(isPC()) renderList();
+  if(activeTopic) renderSimList();
 }
 
 function nextQ(){idx++;showQ();}
@@ -820,11 +1106,13 @@ function confirmClearRecords(){
 
 /* 초기화 */
 initTheme();
-loadRecords();   // ★ 저장된 오답 기록 불러오기
+loadRecords();
+updateModeBadge();
 applyLayout();
 buildPool('전체');
 showQ();
 renderList();
+buildTopicCache(); // 유사문제 캐시 사전 빌드
 </script>
 
 <!-- 오답 기록 패널 모달 -->
