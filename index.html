@@ -581,6 +581,23 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
     <div class="list-body"><div class="list-grid" id="listGrid"></div></div>
   </div>
 
+  <!-- 유사문제 탭 -->
+  <div id="similarTab" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+    <div class="sim-header">
+      <div class="sim-title">🔍 유사문제 그룹</div>
+    </div>
+    <div class="sim-topics" id="simTopicBar"></div>
+    <div class="sim-stats" id="simStats">주제를 선택하면 관련 문제를 모아서 풀 수 있습니다</div>
+    <div class="sim-list" id="simList">
+      <div class="sim-empty">위에서 주제를 선택해 주세요</div>
+    </div>
+    <div class="sim-footer">
+      <button class="sim-start-btn" id="simStartBtn" onclick="startSimilarQuiz()" style="opacity:.4" disabled>
+        🚀 주제를 선택해 주세요
+      </button>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -651,16 +668,19 @@ function applyLayout(){
   const sp=document.getElementById('similarTab');
   const tb=document.getElementById('tabBar');
   if(isPC()){
+    tb.style.display='none';
     lp.style.display='flex';
     sp.style.display='none';
-    tb.style.display='none';
+    document.getElementById('quizTab').style.display='';
     renderList();
   } else {
     tb.style.display='';
-    if(!document.getElementById('tabList').classList.contains('active'))
-      lp.style.display='none';
-    if(!document.getElementById('tabSimilar').classList.contains('active'))
-      sp.style.display='none';
+    // 모바일 기본: 퀴즈 탭 활성
+    const activeTab=document.querySelector('.tab.active');
+    const activeId=activeTab?activeTab.id:'tabQuiz';
+    lp.style.display=(activeId==='tabList')?'flex':'none';
+    sp.style.display=(activeId==='tabSimilar')?'flex':'none';
+    document.getElementById('quizTab').style.display=(activeId==='tabQuiz')?'':'none';
   }
 }
 window.addEventListener('resize',applyLayout);
@@ -714,7 +734,11 @@ function updateModeUI(){
 function setMode(mode){
   if(mode==='wrong' && wrongSet.size===0){ alert('저장된 오답이 없습니다.'); return; }
   quizMode = mode;
-  updateModeUI();
+  // 모드 버튼 UI 업데이트
+  ['Random','Order','Wrong'].forEach(m=>{
+    const btn=document.getElementById('mode'+m);
+    if(btn) btn.classList.toggle('active', m.toLowerCase()===mode);
+  });
   buildPool(currentCat);
   sCorrect=0; sWrong=0; updateHdr();
   document.getElementById('qCard').style.display='';
@@ -737,8 +761,9 @@ function buildPool(cat){
   } else {
     base = DATA.filter(q=>q.category===cat);
   }
+  // 항상 먼저 번호순 정렬 후 랜덤이면 섞기
+  base.sort((a,b)=>a.num-b.num);
   if(quizMode==='random') shuffle(base);
-  else base.sort((a,b)=>a.num-b.num);
   pool=base; idx=0;
 }
 
@@ -831,21 +856,22 @@ function startSimilarQuiz(){
 
 /* ── switchTab 확장 ── */
 function switchTab(tab){
-  if(isPC() && tab!=='similar') return;
+  // PC에서는 list는 항상 보이고, quiz/similar만 전환
   ['quiz','list','similar'].forEach(t=>{
-    document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active',t===tab);
+    const el=document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(el) el.classList.toggle('active',t===tab);
   });
-  document.getElementById('quizTab').style.display = tab==='quiz'?'':'none';
+  document.getElementById('quizTab').style.display=(tab==='quiz')?'':'none';
   const lp=document.getElementById('listPanel');
-  if(tab==='list'){lp.style.display='flex'; renderList();}
-  else if(!isPC()) lp.style.display='none';
-  const sp=document.getElementById('similarTab');
-  if(tab==='similar'){
-    sp.style.display='flex';
-    initSimilarTab();
+  if(isPC()){
+    lp.style.display='flex'; // PC: 목록 항상 표시
   } else {
-    sp.style.display='none';
+    lp.style.display=(tab==='list')?'flex':'none';
+    if(tab==='list') renderList();
   }
+  const sp=document.getElementById('similarTab');
+  sp.style.display=(tab==='similar')?'flex':'none';
+  if(tab==='similar') initSimilarTab();
 }
 
 
@@ -863,7 +889,6 @@ function updateHdr(){
 }
 
 /* 풀 구성 */
-/* buildPool → 위에 재정의됨 */
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
 
 /* 문제 표시 */
