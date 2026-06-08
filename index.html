@@ -265,6 +265,37 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
 .li-status.ok{color:var(--green);}
 .li-status.ng{color:var(--red);}
 .list-empty{text-align:center;padding:40px 16px;color:var(--text-faint);font-size:13px;}
+/* ── 별표(즐겨찾기) ── */
+.star-btn{
+  background:none;border:none;font-size:20px;line-height:1;
+  cursor:pointer;padding:2px 4px;transition:transform .15s;
+  color:var(--text-faint);flex-shrink:0;
+}
+.star-btn:hover{transform:scale(1.25);}
+.star-btn.starred{color:#f5c518;}
+/* 별표 카운트 배지 */
+.star-badge{
+  display:flex;align-items:center;gap:4px;padding:5px 10px;
+  border-radius:6px;border:1.5px solid var(--border);background:var(--surface2);
+  font-family:var(--mono);font-size:12px;color:var(--text-faint);cursor:pointer;transition:all .2s;
+}
+.star-badge:hover,.star-badge.has-star{border-color:#f5c518;color:#f5c518;}
+.star-badge.has-star{background:rgba(245,197,24,.1);}
+.star-list-item{
+  display:flex;align-items:center;gap:9px;padding:10px 11px;
+  border-radius:7px;border:1.5px solid rgba(245,197,24,.4);margin-bottom:6px;
+  cursor:pointer;background:rgba(245,197,24,.06);transition:all .15s;
+}
+.star-list-item:hover{border-color:#f5c518;}
+
+/* 문제 목록 별표 표시 */
+.li-star{font-size:13px;flex-shrink:0;color:#f5c518;}
+/* 480px */
+@media(max-width:480px){
+  .star-btn{font-size:18px;}
+  .star-badge{padding:3px 7px;font-size:11px;}
+}
+
 /* ── 풀이 모드 바 ── */
 .mode-bar{
   background:var(--surface);border-bottom:1px solid var(--border);
@@ -486,6 +517,10 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
       <span>오답 <span class="sv ng" id="hW">0</span></span>
       <span>정답률 <span class="sv" id="hR">-</span></span>
     </div>
+    <div class="star-badge" id="starBadge" title="별표 문제 보기" onclick="showStarPanel()">
+      <span>⭐</span>
+      <span id="starCnt">0</span>
+    </div>
     <div class="saved-badge" id="savedBadge" title="누적 오답 기록" onclick="showRecordPanel()">
       <span class="saved-icon">📋</span>
       <span id="savedWrongCnt">0</span>
@@ -514,6 +549,9 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
         <button class="mode-btn" id="modeWrong" onclick="setMode('wrong')">
           <span class="mi">❌</span>오답만<span class="mode-badge" id="badgeWrongMode">0</span>
         </button>
+        <button class="mode-btn" id="modeStar" onclick="setMode('star')">
+          <span class="mi">⭐</span>별표만<span class="mode-badge" id="badgeStarMode">0</span>
+        </button>
       </div>
     </div>
     <div class="filter-bar">
@@ -541,6 +579,7 @@ button{font-family:var(--sans);cursor:pointer;border:none;}
             <span class="q-num" id="qNum">Q.0</span>
             <span class="q-cat" id="qCat"></span>
             <span class="q-hist" id="qHist"></span>
+            <button class="star-btn" id="starBtn" onclick="toggleStar()" title="별표 표시">☆</button>
           </div>
           <div class="q-text" id="qText"></div>
           <div class="q-img" id="qImg" style="display:none"><img id="qImgEl" src="" alt="문제 그림"></div>
@@ -687,6 +726,143 @@ window.addEventListener('resize',applyLayout);
 
 /* switchTab → 아래 재정의 */
 
+
+/* ── 별표(즐겨찾기) ── */
+const STAR_KEY = 'quiz_stars_v1';
+let starSet = new Set();
+
+function loadStars(){
+  try{
+    const raw = localStorage.getItem(STAR_KEY);
+    if(raw) starSet = new Set(JSON.parse(raw));
+  }catch(e){ starSet = new Set(); }
+}
+
+function saveStars(){
+  try{
+    localStorage.setItem(STAR_KEY, JSON.stringify([...starSet]));
+  }catch(e){}
+}
+
+function toggleStar(){
+  const q = pool[idx];
+  if(!q) return;
+  if(starSet.has(q.num)){
+    starSet.delete(q.num);
+  } else {
+    starSet.add(q.num);
+  }
+  saveStars();
+  updateStarBtn(q.num);
+  updateStarBadge();
+  if(isPC()) renderList();
+}
+
+function updateStarBtn(num){
+  const btn = document.getElementById('starBtn');
+  if(!btn) return;
+  const starred = starSet.has(num);
+  btn.textContent = starred ? '★' : '☆';
+  btn.classList.toggle('starred', starred);
+  btn.title = starred ? '별표 해제' : '별표 표시';
+}
+
+function updateStarBadge(){
+  const cnt = starSet.size;
+  document.getElementById('starCnt').textContent = cnt;
+  const badge = document.getElementById('starBadge');
+  badge.classList.toggle('has-star', cnt > 0);
+  const modeBadge = document.getElementById('badgeStarMode');
+  if(modeBadge) modeBadge.textContent = cnt;
+}
+
+/* 별표 패널 */
+function showStarPanel(){
+  const nums = [...starSet].sort((a,b)=>a-b);
+  document.getElementById('starSummary').textContent =
+    nums.length > 0 ? '총 ' + nums.length + '개 문제에 별표 표시됨' : '별표 표시한 문제가 없습니다';
+  const list = document.getElementById('starList');
+  const btnStart = document.getElementById('btnStartStar');
+  if(!nums.length){
+    list.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-faint);font-size:13px;">별표 표시한 문제가 없습니다<br><br>문제 카드 우측 상단의 ☆을 눌러 표시해 보세요</div>';
+    btnStart.style.opacity = '0.4';
+    btnStart.disabled = true;
+  } else {
+    list.innerHTML = nums.map(num => {
+      const q = DATA.find(q=>q.num===num);
+      if(!q) return '';
+      const st = results[num];
+      const stIcon = st==='correct'?'<span style="color:var(--green)">✓</span>':
+                     st==='wrong'?'<span style="color:var(--red)">✗</span>':'';
+      return '<div onclick="goToStarQ('+num+')" class="star-list-item">'+
+        '<span style="font-family:var(--mono);font-size:11px;font-weight:700;color:#f5c518;'+
+          'background:rgba(245,197,24,.15);padding:2px 6px;border-radius:3px;flex-shrink:0;">Q.'+num+'</span>'+
+        '<div style="flex:1;min-width:0;">'+
+          '<div style="font-size:12px;line-height:1.45;color:var(--text);'+
+            'overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">'+q.question+'</div>'+
+          '<div style="font-size:10px;color:var(--text-faint);font-family:var(--mono);margin-top:2px;">'+q.category+'</div>'+
+        '</div>'+
+        stIcon+
+        '<button onclick="event.stopPropagation();removeStarFromPanel('+num+')" '+
+          'style="background:none;border:none;color:#f5c518;font-size:16px;cursor:pointer;padding:0 2px;flex-shrink:0;">★</button>'+
+      '</div>';
+    }).join('');
+    btnStart.style.opacity = '1';
+    btnStart.disabled = false;
+  }
+  document.getElementById('starOverlay').style.display = 'block';
+  document.getElementById('starPanel').style.display = 'flex';
+}
+
+function hideStarPanel(){
+  document.getElementById('starOverlay').style.display = 'none';
+  document.getElementById('starPanel').style.display = 'none';
+}
+
+function removeStarFromPanel(num){
+  starSet.delete(num);
+  saveStars();
+  updateStarBadge();
+  showStarPanel(); // 패널 새로고침
+  if(isPC()) renderList();
+}
+
+function goToStarQ(num){
+  hideStarPanel();
+  const nums = [...starSet].sort((a,b)=>a-b);
+  pool = nums.map(n=>DATA.find(q=>q.num===n)).filter(Boolean);
+  if(quizMode==='random') shuffle(pool);
+  const qi = pool.findIndex(q=>q.num===num);
+  idx = qi>=0 ? qi : 0;
+  document.getElementById('qCard').style.display='';
+  if(!isPC()) switchTab('quiz');
+  showQ();
+}
+
+function startStarQuiz(){
+  if(starSet.size===0){ alert('별표 표시한 문제가 없습니다.'); return; }
+  hideStarPanel();
+  const nums = [...starSet].sort((a,b)=>a-b);
+  pool = nums.map(n=>DATA.find(q=>q.num===n)).filter(Boolean);
+  if(quizMode==='random') shuffle(pool);
+  idx=0; sCorrect=0; sWrong=0; updateHdr();
+  document.getElementById('qCard').style.display='';
+  if(!isPC()) switchTab('quiz');
+  showQ();
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  currentCat='전체';
+}
+
+function clearAllStars(){
+  if(!confirm('모든 별표를 해제하시겠습니까?')) return;
+  starSet.clear();
+  saveStars();
+  updateStarBadge();
+  showStarPanel();
+  updateStarBtn(pool[idx]?.num);
+  if(isPC()) renderList();
+}
+
 /* ── 유사문제 주제 그룹 ── */
 const TOPIC_GROUPS = [
   ["위험성평가", ["위험성평가","위험성 평가","위험성추정","위험성결정","유해·위험요인"]],
@@ -733,9 +909,9 @@ function updateModeUI(){
 
 function setMode(mode){
   if(mode==='wrong' && wrongSet.size===0){ alert('저장된 오답이 없습니다.'); return; }
+  if(mode==='star' && starSet.size===0){ alert('별표 표시한 문제가 없습니다.'); return; }
   quizMode = mode;
-  // 모드 버튼 UI 업데이트
-  ['Random','Order','Wrong'].forEach(m=>{
+  ['Random','Order','Wrong','Star'].forEach(m=>{
     const btn=document.getElementById('mode'+m);
     if(btn) btn.classList.toggle('active', m.toLowerCase()===mode);
   });
@@ -747,6 +923,8 @@ function setMode(mode){
 
 function updateModeBadge(){
   document.getElementById('badgeWrongMode').textContent = wrongSet.size;
+  const sb = document.getElementById('badgeStarMode');
+  if(sb) sb.textContent = starSet.size;
 }
 
 /* buildPool 오버라이드 */
@@ -754,6 +932,8 @@ function buildPool(cat){
   let base;
   if(quizMode==='wrong'){
     base = DATA.filter(q=>wrongSet.has(q.num));
+  } else if(quizMode==='star'){
+    base = DATA.filter(q=>starSet.has(q.num));
   } else if(cat==='__wrong__'){
     base = DATA.filter(q=>wrongSet.has(q.num));
   } else if(cat==='전체'){
@@ -761,7 +941,6 @@ function buildPool(cat){
   } else {
     base = DATA.filter(q=>q.category===cat);
   }
-  // 항상 먼저 번호순 정렬 후 랜덤이면 섞기
   base.sort((a,b)=>a.num-b.num);
   if(quizMode==='random') shuffle(base);
   pool=base; idx=0;
@@ -906,6 +1085,7 @@ function showQ(){
     hEl.textContent=results[q.num]==='correct'?'✓ 정답 이력':'✗ 오답 이력';
     hEl.className='q-hist '+(results[q.num]==='correct'?'ok':'ng');
   }else{hEl.textContent='';hEl.className='q-hist';}
+  updateStarBtn(q.num);
   const area=document.getElementById('optArea'); area.innerHTML='';
   ['①','②','③','④'].forEach((ch,i)=>{
     if(!q.options[i]) return;
@@ -1025,11 +1205,12 @@ function renderList(){
     const icon=st==='correct'?'<span class="li-status ok">✓</span>':
                 st==='wrong'?'<span class="li-status ng">✗</span>':
                 '<span class="li-status"></span>';
-    const qtxt=q.question.length>52?q.question.substring(0,52)+'…':q.question;
+    const starIcon=starSet.has(q.num)?'<span class="li-star">⭐</span>':'';
+    const qtxt=q.question.length>48?q.question.substring(0,48)+'…':q.question;
     return '<div class="list-item" onclick="goToQ('+q.num+')">'+
       '<span class="li-num">Q.'+q.num+'</span>'+
       '<div class="li-body"><div class="li-q">'+qtxt+'</div><div class="li-cat">'+q.category+'</div></div>'+
-      icon+'</div>';
+      starIcon+icon+'</div>';
   }).join('');
 }
 
@@ -1133,13 +1314,44 @@ function confirmClearRecords(){
 /* 초기화 */
 initTheme();
 loadRecords();
+loadStars();
 updateModeBadge();
+updateStarBadge();
 applyLayout();
 buildPool('전체');
 showQ();
 renderList();
 buildTopicCache(); // 유사문제 캐시 사전 빌드
 </script>
+
+
+<!-- 별표 패널 모달 -->
+<div id="starOverlay" onclick="hideStarPanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;"></div>
+<div id="starPanel" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:101;
+  background:var(--surface);border:1.5px solid #f5c518;border-radius:12px;
+  width:min(480px,92vw);max-height:80vh;overflow:hidden;flex-direction:column;
+  box-shadow:0 8px 40px rgba(0,0,0,.3);">
+  <div style="padding:14px 18px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+    <div style="font-size:15px;font-weight:800;color:var(--text);">⭐ 별표 문제</div>
+    <button onclick="hideStarPanel()" style="background:none;border:none;color:var(--text-faint);font-size:20px;line-height:1;padding:0 4px;">&times;</button>
+  </div>
+  <div style="padding:8px 18px;border-bottom:1px solid var(--border);font-size:12px;font-family:var(--mono);color:var(--text-faint);flex-shrink:0;" id="starSummary">별표 표시한 문제가 없습니다</div>
+  <div style="flex:1;overflow-y:auto;padding:10px 14px;" id="starList"></div>
+  <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;">
+    <button onclick="startStarQuiz()" id="btnStartStar"
+      style="flex:1;padding:10px;border-radius:6px;background:#f5c518;color:#000;border:none;font-size:13px;font-weight:700;cursor:pointer;">
+      ⭐ 별표 문제만 풀기
+    </button>
+    <button onclick="clearAllStars()"
+      style="padding:10px 14px;border-radius:6px;background:var(--surface2);color:var(--text-dim);border:1.5px solid var(--border);font-size:12px;cursor:pointer;">
+      전체 해제
+    </button>
+    <button onclick="hideStarPanel()"
+      style="padding:10px 14px;border-radius:6px;background:var(--surface2);color:var(--text-dim);border:1.5px solid var(--border);font-size:13px;cursor:pointer;">
+      닫기
+    </button>
+  </div>
+</div>
 
 <!-- 오답 기록 패널 모달 -->
 <div id="recordOverlay" onclick="hideRecordPanel()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;"></div>
