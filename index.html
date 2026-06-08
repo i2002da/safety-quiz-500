@@ -704,13 +704,17 @@ function buildTopicCache(){
 /* ── 풀이 모드 ── */
 let quizMode = 'random'; // 'random' | 'order' | 'wrong'
 
+function updateModeUI(){
+  ['random','order','wrong'].forEach(m=>{
+    const el=document.getElementById('mode'+m.charAt(0).toUpperCase()+m.slice(1));
+    if(el) el.classList.toggle('active', m===quizMode);
+  });
+}
+
 function setMode(mode){
   if(mode==='wrong' && wrongSet.size===0){ alert('저장된 오답이 없습니다.'); return; }
   quizMode = mode;
-  ['random','order','wrong'].forEach(m=>{
-    document.getElementById('mode'+m.charAt(0).toUpperCase()+m.slice(1))
-      .classList.toggle('active', m===mode);
-  });
+  updateModeUI();
   buildPool(currentCat);
   sCorrect=0; sWrong=0; updateHdr();
   document.getElementById('qCard').style.display='';
@@ -859,12 +863,7 @@ function updateHdr(){
 }
 
 /* 풀 구성 */
-function buildPool(cat){
-  if(cat==='__wrong__') pool=DATA.filter(q=>wrongSet.has(q.num));
-  else if(cat==='전체') pool=[...DATA];
-  else pool=DATA.filter(q=>q.category===cat);
-  shuffle(pool); idx=0;
-}
+/* buildPool → 위에 재정의됨 */
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
 
 /* 문제 표시 */
@@ -1087,6 +1086,8 @@ function hideRecordPanel(){
 function retryWrongSaved(){
   hideRecordPanel();
   if(wrongSet.size===0){alert('저장된 오답이 없습니다.');return;}
+  quizMode='wrong';
+  updateModeUI();
   currentCat='__wrong__';
   document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
   document.querySelector('[data-cat="__wrong__"]').classList.add('active');
